@@ -46,12 +46,13 @@ RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py31
     /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r && \
     /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro && \
     /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2 && \
-    /usr/local/miniconda3/bin/pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+    /usr/local/miniconda3/bin/pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    echo "export PATH=\"/usr/local/miniconda3/bin:$PATH\"" >> /etc/profile
 
 # 保证cuda不掉
-RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12.1/lib64" >> ~/.bashrc && \
-    echo "export PATH=$PATH:/usr/local/cuda-12.1/bin/" >> ~/.bashrc && \
-    echo "export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-12.1/" >> ~/.bashrc && \
+RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.7/lib64" >> ~/.bashrc && \
+    echo "export PATH=$PATH:/usr/local/cuda-11.7/bin/" >> ~/.bashrc && \
+    echo "export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-11.7/" >> ~/.bashrc && \
     echo -e "\nset ts=4\nset softtabstop=4\nset shiftwidth=4\nset expandtab\nset autoindent" >> /etc/vim/vimrc
 
 WORKDIR /workspace
