@@ -47,7 +47,8 @@ RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py31
     /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro && \
     /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2 && \
     /usr/local/miniconda3/bin/pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
-    echo "export PATH=\"/usr/local/miniconda3/bin:$PATH\"" >> /etc/profile
+    echo "export PATH=\"/usr/local/miniconda3/bin:$PATH\"" >> /etc/profile && \
+    echo ". /usr/local/miniconda3/etc/profile.d/conda.sh" >> ~/.profile
 
 # 保证cuda不掉
 RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.7/lib64" >> ~/.bashrc && \
