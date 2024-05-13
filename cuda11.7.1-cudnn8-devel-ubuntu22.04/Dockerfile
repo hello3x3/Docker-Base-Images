@@ -4,9 +4,6 @@ LABEL maintainer="shujiuhe <shujiuhe@mail.nwpu.edu.cn>"
 
 SHELL [ "/bin/bash", "--login", "-c" ]
 
-# Set Environment Variables
-ENV DEBIAN_FRONTEND noninteractive
-
 # Start as root
 USER root
 
@@ -18,12 +15,14 @@ RUN echo -e "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restric
 
 # 安装并更换中文字体
 RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \
-    echo "export LANG=en_US.UTF-8" >> ~/.bashrc && \
-    echo "export LC_CTYPE=zh_CN.UTF-8" >> ~/.bashrc
+    touch /opt/nvidia/entrypoint.sh && \
+    echo "#!/bin/bash" >> /opt/nvidia/entrypoint.sh && \
+    chmod +x /opt/nvidia/entrypoint.sh && \
+    echo "export LANG=en_US.UTF-8" >> /opt/nvidia/entrypoint.sh && \
+    echo "export LC_CTYPE=zh_CN.UTF-8" >> /opt/nvidia/entrypoint.sh
 
 # 更换系统时间
 COPY --chown=root:root Shanghai /usr/share/zoneinfo/Asia/Shanghai
-
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 # 安装ssh-service
@@ -31,7 +30,7 @@ RUN sed -i "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/g" /etc/ssh/sshd
     sed -i "/#PermitRootLogin yes/d" /etc/ssh/sshd_config && \
     echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
     echo root:5233 | chpasswd && \
-    echo -e "if ! service ssh status &> /dev/null; then\n    service ssh start &> /dev/null\nfi" >> ~/.bashrc
+    echo -e "if ! service ssh status &> /dev/null; then\n    service ssh start\nfi" >> /opt/nvidia/entrypoint.sh
 
 # 安装miniconda3
 RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py310_22.11.1-1-Linux-x86_64.sh && \
@@ -51,9 +50,12 @@ RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py31
     echo ". /usr/local/miniconda3/etc/profile.d/conda.sh" >> ~/.profile
 
 # 保证cuda不掉
-RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.7/lib64" >> ~/.bashrc && \
-    echo "export PATH=$PATH:/usr/local/cuda-11.7/bin/" >> ~/.bashrc && \
-    echo "export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-11.7/" >> ~/.bashrc && \
+RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12.1/lib64" >> /opt/nvidia/entrypoint.sh && \
+    echo "export PATH=$PATH:/usr/local/cuda-12.1/bin/" >> /opt/nvidia/entrypoint.sh && \
+    echo "export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-12.1/" >> /opt/nvidia/entrypoint.sh && \
+    echo ". /opt/nvidia/nvidia_entrypoint.sh" >> /opt/nvidia/entrypoint.sh && \
     echo -e "\nset ts=4\nset softtabstop=4\nset shiftwidth=4\nset expandtab\nset autoindent" >> /etc/vim/vimrc
+
+ENTRYPOINT [ "/opt/nvidia/entrypoint.sh" ]
 
 WORKDIR /workspace
