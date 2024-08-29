@@ -1,0 +1,32 @@
+version: '3.9'
+
+
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER}
+  backend:
+    driver: ${NETWORKS_DRIVER}
+
+
+services:
+
+### simulator ##################################
+    simulator:
+      image: "${EXAMPLE_IMAGE_NAME}:${EXAMPLE_IMAGE_VERSION}"
+      volumes:
+        - /data/shujiuhe/datasets/MP3D/v1/scans/:/public/github/Matterport3DSimulator/data/v1/scans/
+        - /data/shujiuhe/simulator-docker/src/:/workspace/
+      shm_size: '200gb'
+      ports:
+        - "52333:22"
+      tty: true
+      networks:
+        - frontend
+        - backend
+      deploy:
+        resources:
+          reservations:
+            devices:
+            - driver: nvidia
+              device_ids: [ "${EXAMPLE_GPUS}" ]
+              capabilities: [gpu]
