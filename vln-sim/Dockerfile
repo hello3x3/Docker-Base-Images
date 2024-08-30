@@ -1,4 +1,4 @@
-FROM cuda12.1.0-cudnn8-devel-ubuntu22.04
+FROM cuda11.7.1-cudnn8-devel-ubuntu20.04
 
 LABEL maintainer="shujiuhe <shujiuhe@outlook.com>"
 
@@ -11,6 +11,7 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 
 ARG CONDA_ENV="dev"
+ARG PYTHON_VERSION="3.11"
 
 # ==========================================================================
 # 前置操作
@@ -20,7 +21,7 @@ RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get install build-essential cmake git pkg-config libgtk-3-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev gfortran openexr libatlas-base-dev python3-dev python3-numpy libtbb2 libtbb-dev -y
 
-RUN conda create -n ${CONDA_ENV} python=3.11 -y && \
+RUN conda create -n ${CONDA_ENV} python=${PYTHON_VERSION} -y && \
     conda activate ${CONDA_ENV} && \
     pip install numpy pandas && \
     # https://pytorch.org/get-started/previous-versions/
@@ -38,28 +39,27 @@ RUN conda activate ${CONDA_ENV} && \
 # OpenCV
 # ==========================================================================
 
-RUN conda activate ${CONDA_ENV} && \
-    cd /usr/local && \
-    git clone https://github.com/opencv/opencv.git && \
-    git clone https://github.com/opencv/opencv_contrib.git && \
-    cd opencv && \
-    mkdir build && \
-    cd build && \
-    cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D OPENCV_GENERATE_PKGCONFIG=ON -D OPENCV_EXTRA_MODULES_PATH=/usr/local/opencv_contrib/modules -D BUILD_EXAMPLES=ON .. && \
-    make -j16 && \
-    make install
+# RUN conda activate ${CONDA_ENV} && \
+#     cd /usr/local && \
+#     git clone https://github.com/opencv/opencv.git && \
+#     git clone https://github.com/opencv/opencv_contrib.git && \
+#     cd opencv && \
+#     mkdir build && \
+#     cd build && \
+#     cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D OPENCV_GENERATE_PKGCONFIG=ON -D OPENCV_EXTRA_MODULES_PATH=/usr/local/opencv_contrib/modules -D BUILD_EXAMPLES=ON .. && \
+#     make -j16 && \
+#     make install
 
 # ==========================================================================
 # MP3D
 # ==========================================================================
-
+ 
 COPY --chown=root:root to_opencv4.sh /tmp/to_opencv4.sh
 
 RUN conda activate ${CONDA_ENV} && \
     chmod 777 /tmp/to_opencv4.sh && \
     pip install opencv-python opencv-contrib-python numpy pandas networkx && \
-    apt-get install libjsoncpp-dev libepoxy-dev libglm-dev libosmesa6 libosmesa6-dev libglew-dev -y && \
-    sed -i 's/# define SIGSTKSZ sysconf (_SC_SIGSTKSZ)/# define SIGSTKSZ 16384/g' /usr/include/x86_64-linux-gnu/bits/sigstksz.h
+    apt-get install libjsoncpp-dev libepoxy-dev libglm-dev libosmesa6 libosmesa6-dev libglew-dev -y
 
 RUN conda activate ${CONDA_ENV} && \
     mkdir -p /public/github && cd /public/github && \
@@ -71,16 +71,12 @@ RUN conda activate ${CONDA_ENV} && \
     cd pybind11 && git checkout v2.11.1 && \
     cd /public/github/Matterport3DSimulator && mkdir build && cd build && \
     cmake -DPYTHON_EXECUTABLE:FILEPATH=/usr/local/miniconda3/envs/${CONDA_ENV}/bin/python \
-    -DPYTHON_LIBRARY=/usr/local/miniconda3/envs/${CONDA_ENV}/lib/libpython"$(python -V 2>&1 | grep -oP '(?<=Python )(\d+\.\d+)')".so \
-    -DPYTHON_INCLUDE_DIR=/usr/local/miniconda3/envs/${CONDA_ENV}/include/python"$(python -V 2>&1 | grep -oP '(?<=Python )(\d+\.\d+)')"/ \
+    -DPYTHON_LIBRARY=/usr/local/miniconda3/envs/${CONDA_ENV}/lib/libpython${PYTHON_VERSION}.so \
+    -DPYTHON_INCLUDE_DIR=/usr/local/miniconda3/envs/${CONDA_ENV}/include/python${PYTHON_VERSION}/ \
     -DEGL_RENDERING=ON .. && \
     make
 
-RUN echo -e $"\
-\n\
-export PYTHONPATH=$PYTHONPATH:/public/github/Matterport3DSimulator/build \n\
-\n\
-" >> ~/.bashrc
+RUN echo -e $"\nexport PYTHONPATH=$PYTHONPATH:/public/github/Matterport3DSimulator/build \n\n" >> ~/.bashrc
 
 # ==========================================================================
 # Habitat
@@ -99,7 +95,9 @@ RUN conda activate ${CONDA_ENV} && \
 # dev: custom
 # ==========================================================================
 
-
+# 解决动态链接失效问题
+RUN rm /usr/local/miniconda3/envs/dev/lib/libffi.so.7 && \
+    ln -s /lib/x86_64-linux-gnu/libffi.so.7.1.0 libffi.so.7
 
 # ==========================================================================
 # 后处理

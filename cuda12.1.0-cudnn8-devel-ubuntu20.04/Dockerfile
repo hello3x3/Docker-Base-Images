@@ -1,6 +1,6 @@
-FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu20.04
 
-LABEL maintainer="shujiuhe <shujiuhe@mail.nwpu.edu.cn>"
+LABEL maintainer="shujiuhe <shujiuhe@outlook.com>"
 
 SHELL [ "/bin/bash", "--login", "-c" ]
 
@@ -8,10 +8,10 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 USER root
 
 # 更换清华源
-RUN echo -e "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse\n\ndeb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse\n# deb-src http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse\n\n\n# deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse\n# # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse" > /etc/apt/sources.list && \
+RUN echo -e "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse" > /etc/apt/sources.list && \
     apt-get clean && \
     apt-get update && \
-    apt-get install -y vim git locales openssh-server
+    apt-get install -y --no-install-recommends vim git locales openssh-server wget
 
 # 安装并更换中文字体
 RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \
@@ -50,9 +50,9 @@ RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py31
     echo ". /usr/local/miniconda3/etc/profile.d/conda.sh" >> ~/.profile
 
 # 保证cuda不掉
-RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.7/lib64/" >> /opt/nvidia/entrypoint.sh && \
-    echo "export PATH=$PATH:/usr/local/cuda-11.7/bin/" >> /opt/nvidia/entrypoint.sh && \
-    echo "export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-11.7/" >> /opt/nvidia/entrypoint.sh && \
+RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12.1/lib64" >> /opt/nvidia/entrypoint.sh && \
+    echo "export PATH=$PATH:/usr/local/cuda-12.1/bin/" >> /opt/nvidia/entrypoint.sh && \
+    echo "export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-12.1/" >> /opt/nvidia/entrypoint.sh && \
     echo ". /opt/nvidia/nvidia_entrypoint.sh" >> /opt/nvidia/entrypoint.sh && \
     echo -e "\nset ts=4\nset softtabstop=4\nset shiftwidth=4\nset expandtab\nset autoindent" >> /etc/vim/vimrc
 
