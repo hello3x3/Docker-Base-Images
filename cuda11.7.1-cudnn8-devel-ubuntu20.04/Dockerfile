@@ -11,7 +11,16 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 
 # 更换清华源
-RUN echo -e "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse\n# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse" > /etc/apt/sources.list && \
+RUN echo -e 'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse\n'\
+'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse\n'\
+'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse\n'\
+'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse\n'\
+'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse\n'\
+'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse\n\n'\
+'deb http://security.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse\n'\
+'# deb-src http://security.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse\n\n\n'\
+'# deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse\n'\
+'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse' > /etc/apt/sources.list && \
     apt-get clean && \
     apt-get update && \
     apt-get install -y --no-install-recommends vim git locales openssh-server wget
@@ -45,7 +54,7 @@ RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py31
 # 安装并更换中文字体
 RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \
     touch /opt/nvidia/entrypoint.sh && \
-    echo "#!/bin/bash" >> /opt/nvidia/entrypoint.sh && \
+    echo '#!/bin/bash' >> /opt/nvidia/entrypoint.sh && \
     chmod +x /opt/nvidia/entrypoint.sh && \
     echo "export LANG=en_US.UTF-8" >> /opt/nvidia/entrypoint.sh && \
     echo "export LC_CTYPE=zh_CN.UTF-8" >> /opt/nvidia/entrypoint.sh

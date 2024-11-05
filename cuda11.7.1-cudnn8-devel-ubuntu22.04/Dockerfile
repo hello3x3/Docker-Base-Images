@@ -16,7 +16,7 @@ RUN echo -e "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restric
 # 安装并更换中文字体
 RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \
     touch /opt/nvidia/entrypoint.sh && \
-    echo "#!/bin/bash" >> /opt/nvidia/entrypoint.sh && \
+    echo '#!/bin/bash' >> /opt/nvidia/entrypoint.sh && \
     chmod +x /opt/nvidia/entrypoint.sh && \
     echo "export LANG=en_US.UTF-8" >> /opt/nvidia/entrypoint.sh && \
     echo "export LC_CTYPE=zh_CN.UTF-8" >> /opt/nvidia/entrypoint.sh
