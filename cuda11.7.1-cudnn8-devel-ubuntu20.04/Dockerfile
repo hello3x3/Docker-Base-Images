@@ -10,17 +10,8 @@ ENV DEBIAN_FRONTEND noninteractive
 # Start as root
 USER root
 
-# 更换清华源
-RUN echo -e 'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse\n'\
-'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse\n'\
-'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse\n\n'\
-'deb http://security.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse\n'\
-'# deb-src http://security.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse\n\n\n'\
-'# deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse' > /etc/apt/sources.list && \
+# 更换 USTC 源
+RUN sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
     apt-get clean && \
     apt-get update && \
     apt-get install -y --no-install-recommends vim git locales openssh-server wget

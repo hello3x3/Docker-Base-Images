@@ -7,7 +7,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 # Start as root
 USER root
 
-# 更换清华源
+# 更换 USTC 源
 RUN sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
     apt-get clean && \
     apt-get update && \
