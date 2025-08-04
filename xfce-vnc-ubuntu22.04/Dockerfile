@@ -8,16 +8,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 USER root
 
 # 更换清华源
-RUN echo -e 'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse\n'\
-'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse\n'\
-'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse\n\n'\
-'deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse\n'\
-'# deb-src http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse\n\n\n'\
-'# deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse' > /etc/apt/sources.list && \
+RUN sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
     apt-get update && \
     apt-get install -y ca-certificates && \
     apt-get update && \

@@ -8,16 +8,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 USER root
 
 # 更换清华源
-RUN echo -e 'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse\n'\
-'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse\n'\
-'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse\n\n'\
-'deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse\n'\
-'# deb-src http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse\n\n\n'\
-'# deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse\n'\
-'# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse' > /etc/apt/sources.list && \
+RUN sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
     apt-get clean && \
     apt-get update && \
     apt-get install -y vim git locales openssh-server
@@ -49,12 +40,10 @@ RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py31
     /usr/local/miniconda3/bin/conda init && \
     /usr/local/miniconda3/bin/conda config --set show_channel_urls yes && \
     /usr/local/miniconda3/bin/conda config --remove channels defaults && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2 && \
-    /usr/local/miniconda3/bin/pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/main && \
+    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/r && \
+    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/msys2 && \    
+    /usr/local/miniconda3/bin/pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/simple && \
     echo 'export PATH="/usr/local/miniconda3/bin:$PATH"' >> /etc/profile && \
     echo '. /usr/local/miniconda3/etc/profile.d/conda.sh' >> ~/.profile
 

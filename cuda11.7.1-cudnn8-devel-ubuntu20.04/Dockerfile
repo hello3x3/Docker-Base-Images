@@ -42,14 +42,12 @@ RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py31
     /usr/local/miniconda3/bin/conda init && \
     /usr/local/miniconda3/bin/conda config --set show_channel_urls yes && \
     /usr/local/miniconda3/bin/conda config --remove channels defaults && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2 && \
-    /usr/local/miniconda3/bin/pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
-    echo "export PATH=\"/usr/local/miniconda3/bin:$PATH\"" >> /etc/profile && \
-    echo ". /usr/local/miniconda3/etc/profile.d/conda.sh" >> ~/.profile
+    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/main && \
+    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/r && \
+    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/msys2 && \    
+    /usr/local/miniconda3/bin/pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/simple && \
+    echo 'export PATH="/usr/local/miniconda3/bin:$PATH"' >> /etc/profile && \
+    echo '. /usr/local/miniconda3/etc/profile.d/conda.sh' >> ~/.profile
 
 # 安装并更换中文字体
 RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \
