@@ -8,7 +8,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 USER root
 
 # 更换 USTC 源
-RUN sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
+RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
     apt-get update && \
     apt-get install -y ca-certificates && \
     apt-get update && \

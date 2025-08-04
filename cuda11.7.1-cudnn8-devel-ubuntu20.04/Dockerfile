@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 
 # 更换 USTC 源
-RUN sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
+RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
     apt-get clean && \
     apt-get update && \
     apt-get install -y --no-install-recommends vim git locales openssh-server wget
