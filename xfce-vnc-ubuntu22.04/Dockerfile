@@ -13,12 +13,13 @@ RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.l
     apt-get install -y ca-certificates && \
     apt-get update && \
     apt-get upgrade -y && \
-    apt-get install --no-install-recommends -y vim git wget curl sudo gnupg locales software-properties-common python3-numpy && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y vim git wget curl sudo gnupg locales software-properties-common python3-numpy tzdata && \
     apt-get clean
 
 # 更换系统时间
-COPY --chown=root:root Shanghai /usr/share/zoneinfo/Asia/Shanghai
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo "$TZ" > /etc/timezone
 
 # 安装并更换中文字体
 RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \

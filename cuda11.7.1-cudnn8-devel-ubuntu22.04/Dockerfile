@@ -1,6 +1,6 @@
 FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 
-LABEL maintainer="shujiuhe <shujiuhe@mail.nwpu.edu.cn>"
+LABEL maintainer="shujiuhe <shujiuhe@outlook.com>"
 
 SHELL [ "/bin/bash", "--login", "-c" ]
 
@@ -11,7 +11,7 @@ USER root
 RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list && \
     apt-get clean && \
     apt-get update && \
-    apt-get install -y vim git locales openssh-server
+    DEBIAN_FRONTEND=noninteractive apt-get install -y vim git locales openssh-server tzdata
 
 # 安装并更换中文字体
 RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \
@@ -22,8 +22,9 @@ RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \
     echo "export LC_CTYPE=zh_CN.UTF-8" >> /opt/nvidia/entrypoint.sh
 
 # 更换系统时间
-COPY --chown=root:root Shanghai /usr/share/zoneinfo/Asia/Shanghai
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo "$TZ" > /etc/timezone
 
 # 安装ssh-service
 RUN sed -i "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/g" /etc/ssh/sshd_config && \
