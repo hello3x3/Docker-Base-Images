@@ -7,8 +7,7 @@ SHELL [ "/bin/bash", "--login", "-c" ]
 # Start as root
 USER root
 
-# 更换 USTC 源
-# Ubuntu 24.04 的源已迁移到 deb822 格式 /etc/apt/sources.list.d/ubuntu.sources
+# 更换 USTC 源（Ubuntu 24.04 为 deb822 格式）
 RUN sed -i -e 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' \
             -e 's@//security.ubuntu.com@//mirrors.ustc.edu.cn@g' \
             /etc/apt/sources.list.d/ubuntu.sources && \
@@ -16,58 +15,70 @@ RUN sed -i -e 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y vim git locales openssh-server tzdata
 
-# 安装并更换中文字体
+# 中文字体 locale，并初始化 entrypoint 脚本
 RUN locale-gen en_US.UTF-8 zh_CN.utf8 && \
     touch /opt/nvidia/entrypoint.sh && \
     echo '#!/bin/bash' >> /opt/nvidia/entrypoint.sh && \
-    chmod +x /opt/nvidia/entrypoint.sh && \
-    echo 'export LANG=en_US.UTF-8' >> /opt/nvidia/entrypoint.sh && \
-    echo 'export LC_CTYPE=zh_CN.UTF-8' >> /opt/nvidia/entrypoint.sh
+    chmod +x /opt/nvidia/entrypoint.sh
 
-# 更换系统时间（tzdata 由上方 apt 层安装，无需 COPY 时区文件）
+# 系统时间
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo "$TZ" > /etc/timezone
 
-# 安装ssh-service
+# ssh：允许 root 密码登录（root:5233），entrypoint 启动时自动拉起
 RUN sed -i 's/#PermitEmptyPasswords no/PermitEmptyPasswords yes/g' /etc/ssh/sshd_config && \
     sed -i '/#PermitRootLogin yes/d' /etc/ssh/sshd_config && \
     echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && \
     echo root:5233 | chpasswd && \
     echo -e 'if ! service ssh status &> /dev/null; then\n    service ssh start\nfi' >> /opt/nvidia/entrypoint.sh
 
-# 可编程 ssh 启动器（Slurm+pyxis/enroot 场景：读 SSH_PORT 环境变量决定端口并打印实际端口）
-# 注意：不要在本镜像设置 ENV SSH_PORT，否则 pyxis 默认传环境变量时镜像值优先，会盖住用户传入值
+# 可编程 ssh 启动器（Slurm+pyxis/enroot：读 SSH_PORT 决定端口）
+# 注意：镜像内不要设置 ENV SSH_PORT，否则会盖住用户传入值
 COPY start_ssh.sh /opt/start_ssh.sh
 RUN chmod +x /opt/start_ssh.sh && \
     mkdir -p /run/sshd
 
-# 为 root 公钥登录预留 authorized_keys 挂载点（配合 --container-mounts 把宿主机公钥挂进来）
+# root 公钥登录挂载点
 RUN mkdir -p /root/.ssh && \
     touch /root/.ssh/authorized_keys && \
     chmod 700 /root/.ssh && \
     chmod 600 /root/.ssh/authorized_keys
 
-# 安装miniconda3
+# miniconda3 到 /opt/miniconda3；整体 a+rwX 让所有用户都能改 base；envs 1777 防互删
 RUN wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py310_22.11.1-1-Linux-x86_64.sh && \
     chmod +x Miniconda3-py310_22.11.1-1-Linux-x86_64.sh && \
-    bash Miniconda3-py310_22.11.1-1-Linux-x86_64.sh -b -p /usr/local/miniconda3 && \
+    bash Miniconda3-py310_22.11.1-1-Linux-x86_64.sh -b -p /opt/miniconda3 && \
     rm Miniconda3-py310_22.11.1-1-Linux-x86_64.sh && \
-    /usr/local/miniconda3/bin/conda init && \
-    /usr/local/miniconda3/bin/conda config --set show_channel_urls yes && \
-    /usr/local/miniconda3/bin/conda config --remove channels defaults && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/main && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/r && \
-    /usr/local/miniconda3/bin/conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/msys2 && \
-    /usr/local/miniconda3/bin/pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/simple && \
-    echo 'export PATH="/usr/local/miniconda3/bin:$PATH"' >> /etc/profile && \
-    echo '. /usr/local/miniconda3/etc/profile.d/conda.sh' >> ~/.profile
+    /opt/miniconda3/bin/conda init && \
+    chmod -R a+rwX /opt/miniconda3 && \
+    chmod 1777 /opt/miniconda3/envs
 
-# 保证cuda不掉（使用 /usr/local/cuda 通用软链，后续升级 13.x 小版本无需改动）
-RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64' >> /opt/nvidia/entrypoint.sh && \
-    echo 'export PATH=$PATH:/usr/local/cuda/bin' >> /opt/nvidia/entrypoint.sh && \
-    echo 'export CUDA_HOME=$CUDA_HOME:/usr/local/cuda/' >> /opt/nvidia/entrypoint.sh && \
-    echo '. /opt/nvidia/nvidia_entrypoint.sh' >> /opt/nvidia/entrypoint.sh && \
+# conda 全局可用：source 进 login(/etc/profile) 与交互非登录(/etc/bash.bashrc) shell
+RUN echo '. /opt/miniconda3/etc/profile.d/conda.sh' >> /etc/profile && \
+    echo '. /opt/miniconda3/etc/profile.d/conda.sh' >> /etc/bash.bashrc
+
+# 清掉构建期 conda 缓存（须在下方 ENV 之前，否则会漏清 /opt/miniconda3/pkgs）
+RUN /opt/miniconda3/bin/conda clean -afy
+
+# 运行时环境走镜像 ENV：pyxis/enroot 不执行 entrypoint、只注入镜像 ENV，故全终端生效。
+# pip/uv 走 USTC 且禁缓存；conda 无禁缓存开关，包缓存指到 /tmp 不残留
+ENV PATH="/opt/miniconda3/bin:${PATH}" \
+    CUDA_HOME=/usr/local/cuda \
+    LANG=en_US.UTF-8 \
+    LC_CTYPE=zh_CN.UTF-8 \
+    PIP_INDEX_URL=https://mirrors.ustc.edu.cn/pypi/simple \
+    PIP_NO_CACHE_DIR=1 \
+    UV_DEFAULT_INDEX=https://mirrors.ustc.edu.cn/pypi/simple \
+    UV_NO_CACHE=1 \
+    CONDA_PKGS_DIRS=/tmp/conda-pkgs
+
+# conda 包缓存目录预置 1777（防 root 先建导致其他用户不可写）
+RUN mkdir -p /tmp/conda-pkgs && \
+    chmod 1777 /tmp/conda-pkgs
+
+# CUDA 的 PATH/LD_LIBRARY_PATH 由基础镜像 ENV 内置；entrypoint 只补 NVIDIA runtime 脚本与 vim 配置
+RUN echo '. /opt/nvidia/nvidia_entrypoint.sh' >> /opt/nvidia/entrypoint.sh && \
     echo -e '\nset ts=4\nset softtabstop=4\nset shiftwidth=4\nset expandtab\nset autoindent' >> /etc/vim/vimrc
 
 ENTRYPOINT [ "/opt/nvidia/entrypoint.sh" ]
