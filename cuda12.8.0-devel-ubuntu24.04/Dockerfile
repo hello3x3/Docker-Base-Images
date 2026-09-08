@@ -1,4 +1,8 @@
-FROM nvidia/cuda:13.3.1-devel-ubuntu24.04
+# cuda12.8.0-devel-ubuntu24.04 - 与 cuda13.3.1 版本同构，仅基础镜像 CUDA 大版本不同。
+# 选 12.8 的原因：本集群节点驱动 595.71.05 最高支持 CUDA 13.2，13.3.1 镜像会被
+# pyxis 的 nvidia-container-cli 以 "cuda>=13.3 unsatisfied" 拒绝挂载驱动；
+# CUDA 12.8 只需驱动 >= 570（实际 595.71 满足，且完全兼容 12.8 运行时）。
+FROM nvidia/cuda:12.8.0-devel-ubuntu24.04
 
 LABEL maintainer="shujiuhe <shujiuhe@outlook.com>"
 

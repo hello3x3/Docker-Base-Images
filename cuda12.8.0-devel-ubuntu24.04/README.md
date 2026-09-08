@@ -1,13 +1,16 @@
-# cuda13.3.1-devel-ubuntu24.04
+# cuda12.8.0-devel-ubuntu24.04
 
-CUDA 13.3.1 (devel, 无系统级 cuDNN) + Ubuntu 24.04 开发基座。
-换 USTC 源（deb822）、tzdata 时区(Asia/Shanghai)、ssh、miniconda3、中文字体。
-与旧版 `12.1.0-cudnn8-devel-ubuntu22.04` 结构一致，压缩体积约 3.84 GiB。
+CUDA 12.8.0 (devel, 无系统级 cuDNN) + Ubuntu 24.04 开发基座。
+与 `cuda13.3.1-devel-ubuntu24.04` 同构（ssh / 免密 / conda / 挂载点配置完全一致），仅 CUDA 大版本不同。
+
+> 为什么是 12.8 而不是 13.3.1：本集群节点驱动 `595.71.05` 最高支持 **CUDA 13.2**，
+> 跑 13.3.1 镜像会被 pyxis 以 `cuda>=13.3 unsatisfied` 拒绝挂载驱动；
+> CUDA 12.8 只需驱动 >= 570，当前驱动完全满足。
 
 ## 构建
 
 ```bash
-docker build -t cuda13.3.1-devel-ubuntu24.04:latest .
+docker build -t cuda12.8.0-devel-ubuntu24.04:latest .
 ```
 
 ## docker 直接使用
@@ -16,7 +19,7 @@ docker build -t cuda13.3.1-devel-ubuntu24.04:latest .
 docker run -it --rm \
   -e SSH_PORT=2222 \
   --gpus all \
-  cuda13.3.1-devel-ubuntu24.04:latest /opt/start_ssh.sh
+  cuda12.8.0-devel-ubuntu24.04:latest /opt/start_ssh.sh
 ```
 
 > 不设 `SSH_PORT` 时（即不传端口参数），root 与非 root 统一默认监听 **52300**。
@@ -28,27 +31,30 @@ docker run -it --rm \
 - 环境变量用 `--container-env=SSH_PORT` 传入（提交前先 `export SSH_PORT=2222`）；
   镜像内**不要**设置 `ENV SSH_PORT`，否则镜像值优先、host 传入值会被盖住
 - pyxis 默认**不执行**镜像 ENTRYPOINT，直接把 `/opt/start_ssh.sh` 作为命令传入最可靠
-- sshd 端口 <1024 需要 root：非 root 用户要加 `--container-remap-root`
+- ⚠️ **不要给 sshd 加 `--container-remap-root`**（userns remap 会让 Ubuntu sshd 拒绝服务，
+  见下方「公钥登录」警告）；一律用 **`--no-container-remap-root`**
+- sshd 端口 <1024 需要 root：以集群 root 提交即是真 root；普通用户直接选 >=1024 的端口（默认 52300）
 
 ```bash
-# 1) root 模式（ssh 用 root + 密码 5233，或公钥）
+# 1) root 模式（以集群 root 提交 = 真 root：密码 root:5233 或公钥）
 export SSH_PORT=2222
 srun \
+  --no-container-remap-root \
   --container-image=<registry#镜像或本地.sqsh> \
-  --container-remap-root \
   --container-env=SSH_PORT \
   /opt/start_ssh.sh
 
 # 2) 非 root 模式（仅公钥登录；需把公钥放入 ~/.ssh/authorized_keys，home 记得挂载）
 export SSH_PORT=3333
 srun \
+  --no-container-remap-root \
   --container-image=<镜像> \
   --container-env=SSH_PORT \
   --container-mounts=$HOME:$HOME \
   /opt/start_ssh.sh
 
 # 3) 起 sshd 的同时还要交互 shell：把命令追加在脚本后面
-srun --pty --container-image=<镜像> --container-remap-root \
+srun --pty --no-container-remap-root --container-image=<镜像> \
   --container-env=SSH_PORT \
   /opt/start_ssh.sh bash -l
 ```
@@ -108,9 +114,11 @@ srun \
   /opt/start_ssh.sh
 ```
 
-> 需要 GPU 时记得给 srun 加 GPU 分配（`--gpus=1` 或 `--gres=gpu:1`），否则容器里 `nvidia-smi` 报 No devices。
-> 若报 `nvidia-container-cli: requirement error: unsatisfied condition: cuda>=xx`，说明**节点驱动太老**，
-> 装不下该 CUDA 大版本镜像——需管理员升驱动，或换用匹配的旧 CUDA 镜像。
+> 需要 GPU 时记得给 srun 加 GPU 分配（`--gres=gpu:1`；本集群 slurm cgroup 限制下，
+> 不加分配的任务看不到 `/dev/nvidia*`，`nvidia-smi` 报 No devices 属正常）。
+> 若报 `nvidia-container-cli: requirement error: unsatisfied condition: cuda>=xx`，
+> 是节点驱动支持的 CUDA 上限低于镜像大版本：本集群驱动 595.71.05 = CUDA 13.2，
+> 所以这里选 12.8 镜像（需要驱动 >= 570）。
 
 ## host key 与 .ssh-hostkeys 说明
 
